@@ -4,6 +4,7 @@ import { Asset } from '@/types';
 import { AssetCard } from '@/components/AssetCard';
 import { DanmakuLayer } from '@/components/DanmakuLayer';
 import { useSpring, animated, useSprings } from 'react-spring';
+import { useDrag } from 'react-use-gesture';
 import { useVirtualizer } from '@tanstack/react-virtual';
 
 export const FeedPage: React.FC = () => {

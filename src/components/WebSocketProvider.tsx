@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useAppStore } from '@/stores/useAppStore';
 import { WebSocketMessage, Danmaku } from '@/types';
 

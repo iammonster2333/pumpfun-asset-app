@@ -42,7 +42,7 @@ export const BottomNavigation: React.FC = () => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-dark-800 border-t border-dark-700 z-30">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-800 border-t border-gray-700 z-30">
       <div className="flex items-center justify-around py-2">
         {navItems.map((item) => (
           <button
@@ -50,14 +50,14 @@ export const BottomNavigation: React.FC = () => {
             onClick={() => navigate(item.path)}
             className={`flex flex-col items-center space-y-1 px-3 py-2 rounded-lg transition-colors ${
               item.active
-                ? 'text-primary bg-primary/10'
+                ? 'text-blue-500 bg-blue-500/10'
                 : 'text-gray-400 hover:text-white'
             }`}
           >
             <div className="relative">
               <span className="text-lg">{item.icon}</span>
               {item.badge && (
-                <div className="absolute -top-1 -right-1 bg-danger text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
                   {item.badge > 99 ? '99+' : item.badge}
                 </div>
               )}

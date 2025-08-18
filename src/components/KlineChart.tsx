@@ -10,7 +10,26 @@ interface KlineChartProps {
 export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const volumeSeriesRef = useRef<ISeriesApi<"Histogram"> | null>(null);
+
+  // 你可以根据需求决定是否显示成交量
+  const showVolume = true;
+
+  // K线数据和成交量数据 - 转换时间戳格式
+  const chartData: CandlestickData[] = data.map(item => ({
+    time: Math.floor(item.timestamp / 1000) as any, // 转换为秒级时间戳
+    open: item.open,
+    high: item.high,
+    low: item.low,
+    close: item.close
+  }));
+
+  const volumeData = data.map(item => ({
+    time: Math.floor(item.timestamp / 1000) as any, // 转换为秒级时间戳
+    value: item.volume,
+    color: 'rgba(76, 175, 80, 0.5)'
+  }));
 
   useEffect(() => {
     if (!chartContainerRef.current) return;
@@ -77,9 +96,12 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
         minMove: 0.000001,
       }
     });
-    
-    // 添加成交量图表
-    let volumeSeries = null;
+
+    // 设置K线数据
+    candlestickSeries.setData(chartData);
+
+    // 创建成交量图系列
+    let volumeSeries: ISeriesApi<"Histogram"> | null = null;
     if (showVolume) {
       volumeSeries = chart.addHistogramSeries({
         color: '#26a69a',
@@ -92,12 +114,6 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
           bottom: 0,
         },
       });
-
-    // 设置K线数据
-    candlestickSeries.setData(chartData);
-    
-    // 设置成交量数据
-    if (volumeSeries && showVolume) {
       volumeSeries.setData(volumeData);
     }
 
@@ -109,22 +125,19 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
     // 调整大小处理函数
     const handleResize = () => {
       if (chartRef.current && chartContainerRef.current) {
-        chartRef.current.applyOptions({ 
+        chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
-          height: chartContainerRef.current.clientHeight 
+          height: chartContainerRef.current.clientHeight
         });
       }
     };
 
-    // 添加窗口大小变化监听
     window.addEventListener('resize', handleResize);
-    
-    // 设置图表动画效果
+
     if (isActive) {
       chart.timeScale().fitContent();
     }
 
-    // 清理函数
     return () => {
       window.removeEventListener('resize', handleResize);
       if (chartRef.current) {
@@ -140,34 +153,29 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
   useEffect(() => {
     if (!isActive || !candleSeriesRef.current || chartData.length === 0) return;
 
-    // 模拟实时数据更新
     const interval = setInterval(() => {
-      // 获取最后一个数据点
       const lastPoint = chartData[chartData.length - 1];
-      
-      // 随机生成价格变化
+
       const change = (Math.random() - 0.5) * lastPoint.close * 0.01;
       const newClose = lastPoint.close + change;
       const newHigh = Math.max(lastPoint.high, newClose);
       const newLow = Math.min(lastPoint.low, newClose);
-      
-      // 更新最后一个数据点
+
       const updatedPoint = {
         ...lastPoint,
         high: newHigh,
         low: newLow,
         close: newClose,
       };
-      
-      // 更新K线图
-      candleSeriesRef.current.update(updatedPoint);
-      
+
+      candleSeriesRef.current!.update(updatedPoint);
+
       // 更新成交量图
       if (volumeSeriesRef.current && showVolume) {
         const lastVolume = volumeData[volumeData.length - 1];
         const newVolume = {
           ...lastVolume,
-          value: lastVolume.value * (0.9 + Math.random() * 0.2), // 随机波动成交量
+          value: lastVolume.value * (0.9 + Math.random() * 0.2),
           color: newClose >= lastPoint.close ? 'rgba(76, 175, 80, 0.5)' : 'rgba(255, 82, 82, 0.5)'
         };
         volumeSeriesRef.current.update(newVolume);
@@ -180,14 +188,13 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
   // 当激活状态改变时，调整图表显示
   useEffect(() => {
     if (chartRef.current && isActive) {
-      // 自动滚动到最新数据
       chartRef.current.timeScale().fitContent();
     }
   }, [isActive]);
 
   return (
-    <div 
-      ref={chartContainerRef} 
+    <div
+      ref={chartContainerRef}
       className="w-full h-full"
       style={{ background: 'transparent' }}
     />
@@ -195,10 +202,7 @@ export const KlineChart: React.FC<KlineChartProps> = ({ data, isActive }) => {
 };
 
 // 根据时间周期过滤数据
-function filterDataByTimeframe(data: KlineData[], timeframe: '1h' | '1d' | '1w' | '1m'): KlineData[] {
+export function filterDataByTimeframe(data: KlineData[], timeframe: '1h' | '1d' | '1w' | '1m'): KlineData[] {
   if (!data || data.length === 0) return [];
-  
-  // 对于演示目的，我们只是返回原始数据
-  // 在实际应用中，这里应该根据时间周期聚合数据
   return data;
 }
