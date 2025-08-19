@@ -17,7 +17,7 @@ type TutorialStep = {
 const tutorialSteps: TutorialStep[] = [
   {
     id: 1,
-    title: '欢迎来到 PumpFun',
+    title: '欢迎来到 RichFlow',
     description: '这是一个创新的资产发行和交易平台，让我们一起来了解如何使用吧！',
     icon: <FaRocket />,
     position: 'center',
@@ -81,7 +81,7 @@ const tutorialSteps: TutorialStep[] = [
   {
     id: 9,
     title: '准备好了吗？',
-    description: '现在你已经了解了PumpFun的基本功能，开始你的交易之旅吧！',
+    description: '现在你已经了解了RichFlow的基本功能，开始你的交易之旅吧！',
     icon: <FaCheck />,
     position: 'center',
   },

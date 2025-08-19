@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark {
+            background-color: #1a1a1a;
+            color: white;
+        }
+        
+        body.light {
+            background-color: white;
+            color: black;
+        }
+        
+        .theme-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            background: #4f46e5;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .theme-button:hover {
+            background: #3730a3;
+        }
+    </style>
+</head>
+<body class="dark">
+    <h1>主题切换测试</h1>
+    <button class="theme-button" onclick="toggleTheme()">切换主题 🌙</button>
+    <p>当前主题: <span id="current-theme">dark</span></p>
+    
+    <script>
+        let currentTheme = 'dark';
+        
+        function toggleTheme() {
+            console.log('按钮被点击了！当前主题:', currentTheme);
+            
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            currentTheme = newTheme;
+            
+            document.body.classList.remove('light', 'dark');
+            document.body.classList.add(newTheme);
+            
+            document.getElementById('current-theme').textContent = newTheme;
+            document.querySelector('.theme-button').textContent = 
+                newTheme === 'dark' ? '切换主题 🌙' : '切换主题 ☀️';
+            
+            console.log('主题已切换到:', newTheme);
+        }
+    </script>
+</body>
+</html>

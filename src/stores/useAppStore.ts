@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { devtools, persist } from 'zustand/middleware';
 import { User, Asset, WalletState, Notification, Danmaku, Comment, CommunityEvent, Announcement } from '@/types';
 
 interface AppState {
@@ -107,155 +106,146 @@ const initialState: AppState = {
   },
 };
 
-export const useAppStore = create<AppState & AppActions>()(
-  devtools(
-    persist(
-      (set, get) => ({
-        ...initialState,
-        
-        // 用户相关
-        setUser: (user) => set({ user }),
-        updateUserBalance: (balance) => 
-          set((state) => ({
-            user: state.user ? { ...state.user, balance } : null,
-          })),
-        setWalletState: (wallet) => 
-          set((state) => ({
-            wallet: { ...state.wallet, ...wallet },
-          })),
-        
-        // 资产相关
-        setAssets: (assets) => set({ assets }),
-        addAsset: (asset) => 
-          set((state) => ({
-            assets: [asset, ...state.assets],
-          })),
-        updateAsset: (assetId, updates) =>
-          set((state) => ({
-            assets: state.assets.map((asset) =>
-              asset.id === assetId ? { ...asset, ...updates } : asset
-            ),
-            currentAsset: state.currentAsset?.id === assetId 
-              ? { ...state.currentAsset, ...updates }
-              : state.currentAsset,
-          })),
-        setCurrentAsset: (asset) => set({ currentAsset: asset }),
-        setAssetFilters: (filters) => set({ assetFilters: filters }),
-        
-        // UI相关
-        setLoading: (loading) => set({ isLoading: loading }),
-        setCurrentView: (view) => set({ currentView: view }),
-        toggleTheme: () => 
-          set((state) => ({
-            theme: state.theme === 'light' ? 'dark' : 'light',
-          })),
-        
-        // 社交功能
-        addNotification: (notification) =>
-          set((state) => ({
-            notifications: [notification, ...state.notifications],
-            unreadNotifications: state.unreadNotifications + 1,
-          })),
-        markNotificationAsRead: (notificationId) =>
-          set((state) => ({
-            notifications: state.notifications.map((notification) =>
-              notification.id === notificationId
-                ? { ...notification, read: true }
-                : notification
-            ),
-            unreadNotifications: Math.max(0, state.unreadNotifications - 1),
-          })),
-        clearNotifications: () => set({ notifications: [], unreadNotifications: 0 }),
-        addDanmaku: (danmaku) =>
-          set((state) => ({
-            danmaku: [...state.danmaku, danmaku],
-          })),
-        clearDanmaku: () => set({ danmaku: [] }),
-        
-        // 评论相关
-        addComment: (assetId, comment) =>
-          set((state) => ({
-            comments: {
-              ...state.comments,
-              [assetId]: [...(state.comments[assetId] || []), comment],
-            },
-          })),
-        removeComment: (assetId, commentId) =>
-          set((state) => ({
-            comments: {
-              ...state.comments,
-              [assetId]: (state.comments[assetId] || []).filter(
-                (comment) => comment.id !== commentId
-              ),
-            },
-          })),
-        likeComment: (assetId, commentId) =>
-          set((state) => ({
-            comments: {
-              ...state.comments,
-              [assetId]: (state.comments[assetId] || []).map((comment) =>
-                comment.id === commentId
-                  ? { ...comment, likes: comment.likes + 1 }
-                  : comment
-              ),
-            },
-          })),
-        
-        // 社区相关
-        addCommunityEvent: (assetId, event) =>
-          set((state) => ({
-            communityEvents: {
-              ...state.communityEvents,
-              [assetId]: [...(state.communityEvents[assetId] || []), event],
-            },
-          })),
-        removeCommunityEvent: (assetId, eventId) =>
-          set((state) => ({
-            communityEvents: {
-              ...state.communityEvents,
-              [assetId]: (state.communityEvents[assetId] || []).filter(
-                (event) => event.id !== eventId
-              ),
-            },
-          })),
-        addAnnouncement: (assetId, announcement) =>
-          set((state) => ({
-            announcements: {
-              ...state.announcements,
-              [assetId]: [...(state.announcements[assetId] || []), announcement],
-            },
-          })),
-        removeAnnouncement: (assetId, announcementId) =>
-          set((state) => ({
-            announcements: {
-              ...state.announcements,
-              [assetId]: (state.announcements[assetId] || []).filter(
-                (announcement) => announcement.id !== announcementId
-              ),
-            },
-          })),
-        
-        // 设置
-        updateSettings: (settings) =>
-          set((state) => ({
-            settings: { ...state.settings, ...settings },
-          })),
-        
-        // 重置
-        reset: () => set(initialState),
-      }),
-      {
-        name: 'pumpfun-app-storage',
-        partialize: (state) => ({
-          user: state.user,
-          wallet: state.wallet,
-          theme: state.theme,
-          settings: state.settings,
-        }),
-      }
-    ),
-    {
-      name: 'pumpfun-app-store',
-    }
-  )
-);
+export const useAppStore = create<AppState & AppActions>()((set) => ({
+  ...initialState,
+  
+  // 用户相关
+  setUser: (user) => set({ user }),
+  updateUserBalance: (balance) => 
+    set((state) => ({
+      user: state.user ? { ...state.user, balance } : null,
+    })),
+  setWalletState: (wallet) => 
+    set((state) => ({
+      wallet: { ...state.wallet, ...wallet },
+    })),
+  
+  // 资产相关
+  setAssets: (assets) => set({ assets }),
+  addAsset: (asset) => 
+    set((state) => ({
+      assets: [asset, ...state.assets],
+    })),
+  updateAsset: (assetId, updates) =>
+    set((state) => ({
+      assets: state.assets.map((asset) =>
+        asset.id === assetId ? { ...asset, ...updates } : asset
+      ),
+      currentAsset: state.currentAsset?.id === assetId 
+        ? { ...state.currentAsset, ...updates }
+        : state.currentAsset,
+    })),
+  setCurrentAsset: (asset) => set({ currentAsset: asset }),
+  setAssetFilters: (filters) => set({ assetFilters: filters }),
+  
+  // UI相关
+  setLoading: (loading) => set({ isLoading: loading }),
+  setCurrentView: (view) => set({ currentView: view }),
+  toggleTheme: () => {
+    console.log('Store toggleTheme called');
+    set((state) => {
+      const newTheme = state.theme === 'light' ? 'dark' : 'light';
+      console.log('Changing theme from', state.theme, 'to', newTheme);
+      
+      // 直接更新body类
+      document.body.classList.remove('light', 'dark');
+      document.body.classList.add(newTheme);
+      
+      return { theme: newTheme };
+    });
+  },
+  
+  // 社交功能
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [notification, ...state.notifications],
+      unreadNotifications: state.unreadNotifications + 1,
+    })),
+  markNotificationAsRead: (notificationId) =>
+    set((state) => ({
+      notifications: state.notifications.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, read: true }
+          : notification
+      ),
+      unreadNotifications: Math.max(0, state.unreadNotifications - 1),
+    })),
+  clearNotifications: () => set({ notifications: [], unreadNotifications: 0 }),
+  addDanmaku: (danmaku) =>
+    set((state) => ({
+      danmaku: [...state.danmaku, danmaku],
+    })),
+  clearDanmaku: () => set({ danmaku: [] }),
+  
+  // 评论相关
+  addComment: (assetId, comment) =>
+    set((state) => ({
+      comments: {
+        ...state.comments,
+        [assetId]: [...(state.comments[assetId] || []), comment],
+      },
+    })),
+  removeComment: (assetId, commentId) =>
+    set((state) => ({
+      comments: {
+        ...state.comments,
+        [assetId]: (state.comments[assetId] || []).filter(
+          (comment) => comment.id !== commentId
+        ),
+      },
+    })),
+  likeComment: (assetId, commentId) =>
+    set((state) => ({
+      comments: {
+        ...state.comments,
+        [assetId]: (state.comments[assetId] || []).map((comment) =>
+          comment.id === commentId
+            ? { ...comment, likes: comment.likes + 1 }
+            : comment
+        ),
+      },
+    })),
+  
+  // 社区相关
+  addCommunityEvent: (assetId, event) =>
+    set((state) => ({
+      communityEvents: {
+        ...state.communityEvents,
+        [assetId]: [...(state.communityEvents[assetId] || []), event],
+      },
+    })),
+  removeCommunityEvent: (assetId, eventId) =>
+    set((state) => ({
+      communityEvents: {
+        ...state.communityEvents,
+        [assetId]: (state.communityEvents[assetId] || []).filter(
+          (event) => event.id !== eventId
+        ),
+      },
+    })),
+  addAnnouncement: (assetId, announcement) =>
+    set((state) => ({
+      announcements: {
+        ...state.announcements,
+        [assetId]: [...(state.announcements[assetId] || []), announcement],
+      },
+    })),
+  removeAnnouncement: (assetId, announcementId) =>
+    set((state) => ({
+      announcements: {
+        ...state.announcements,
+        [assetId]: (state.announcements[assetId] || []).filter(
+          (announcement) => announcement.id !== announcementId
+        ),
+      },
+    })),
+  
+  // 设置
+  updateSettings: (settings) =>
+    set((state) => ({
+      settings: { ...state.settings, ...settings },
+    })),
+  
+  // 重置
+  reset: () => set(initialState),
+}));

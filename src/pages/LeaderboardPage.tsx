@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+
 import { useAppStore } from '@/stores/useAppStore';
 import { Leaderboard, LeaderboardEntry, Asset } from '@/types';
 import { motion } from 'framer-motion';
@@ -13,6 +14,52 @@ export const LeaderboardPage: React.FC = () => {
   const [trendingAssets, setTrendingAssets] = useState<Asset[]>([]);
   const [hotAssets, setHotAssets] = useState<Asset[]>([]);
   const [timeframe, setTimeframe] = useState<'1h' | '24h' | '7d' | '30d'>('24h');
+  // 面向 KlineChart 的受控周期集合
+  type ChartTF = '1m'|'3m'|'5m'|'15m'|'1d'|'3d'|'5d'|'1w'|'3w'|'1M'|'3M';
+  const [chartTf, setChartTf] = useState<ChartTF>('15m');
+
+  // 根据页面的 timeframe（1h/24h/7d/30d）映射到 KlineChart 的周期
+  useEffect(() => {
+    const map = (tf: typeof timeframe): ChartTF => {
+      switch (tf) {
+        case '1h': return '15m';
+        case '24h': return '1d';
+        case '7d': return '1w';
+        case '30d': return '1M';
+        default: return '15m';
+      }
+    };
+    const next = map(timeframe);
+    if (next !== chartTf) {
+      console.log('[LeaderboardPage] 根据页面周期映射为图表周期:', timeframe, '->', next);
+      setChartTf(next);
+    }
+  }, [timeframe]);
+
+  // 监听全局的时间周期切换（来自 AssetCard 的按钮）
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as ChartTF | undefined;
+      if (!detail) return;
+      console.log('[LeaderboardPage] 收到全局周期切换:', detail);
+      setChartTf(detail);
+    };
+    window.addEventListener('kline:setTimeframe', handler as EventListener);
+    return () => window.removeEventListener('kline:setTimeframe', handler as EventListener);
+  }, []);
+
+  // 兜底：轮询全局变量（防止某些环境自定义事件失效）
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // @ts-ignore
+      const tf = window.__kline_tf as ChartTF | undefined;
+      if (tf && tf !== chartTf) {
+        console.log('[LeaderboardPage][poll] 同步全局周期:', tf);
+        setChartTf(tf);
+      }
+    }, 300);
+    return () => clearInterval(timer);
+  }, [chartTf]);
 
   useEffect(() => {
     // 模拟生成热门资产数据
@@ -445,9 +492,9 @@ export const LeaderboardPage: React.FC = () => {
                 <div className="w-24 h-16 mx-2">
                   <KlineChart 
                     data={asset.klineData} 
-                    height={60} 
-                    showVolume={false} 
-                    timeframe={timeframe}
+                    isActive={true}
+                    timeframe={chartTf}
+                    showControls={false}
                   />
                 </div>
 
@@ -539,9 +586,9 @@ export const LeaderboardPage: React.FC = () => {
                 <div className="w-full h-32 mt-2">
                   <KlineChart 
                     data={asset.klineData} 
-                    height={120} 
-                    showVolume={true} 
-                    timeframe={timeframe}
+                    isActive={true}
+                    timeframe={chartTf}
+                    showControls={false}
                   />
                 </div>
 

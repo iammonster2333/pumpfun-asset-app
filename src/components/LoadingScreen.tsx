@@ -6,7 +6,7 @@ export const LoadingScreen: React.FC = () => {
       <div className="text-center">
         <div className="mb-8">
           <h1 className="text-4xl font-bold gradient-text mb-2">
-            PumpFun
+            RichFlow
           </h1>
           <p className="text-gray-400">
             金融短视频资产交易平台

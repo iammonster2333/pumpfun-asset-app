@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply bg-white text-black;
+    @apply bg-gray-900 text-white;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 

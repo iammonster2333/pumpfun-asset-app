@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect } from 'react';
+import { useAppStore } from '@/stores/useAppStore';
 
 interface ThemeContextType {
   theme: 'light' | 'dark';
@@ -13,15 +14,16 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, theme }) => {
+  const { toggleTheme: storeToggleTheme } = useAppStore();
+  
   const toggleTheme = () => {
-    // 这里可以通过store来切换主题
-    console.log('Toggle theme');
+    storeToggleTheme();
   };
 
   useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
+    const body = document.body;
+    body.classList.remove('light', 'dark');
+    body.classList.add(theme);
   }, [theme]);
 
   return (

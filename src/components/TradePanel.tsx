@@ -76,9 +76,6 @@ export const TradePanel: React.FC<TradePanelProps> = ({
       const estimatedPrice = calculateEstimatedPrice();
       const totalValue = amountValue * estimatedPrice;
       
-      // 生成模拟交易哈希
-      const txHash = `0x${Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('')}`;
-      
       alert(`${tradeType === 'buy' ? '买入' : '卖出'}成功！\n数量: ${amount} ${asset.symbol}${leverage > 1 ? ` (${leverage}x杠杆)` : ''}\n总价值: $${totalValue.toFixed(2)}`);
       
       // 回调
@@ -140,7 +137,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({
             onClick={() => setTradeType('buy')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               tradeType === 'buy'
-                ? 'bg-success text-white'
+                ? 'bg-red-500 text-white'
                 : 'text-gray-300 hover:text-white'
             }`}
           >
@@ -150,7 +147,7 @@ export const TradePanel: React.FC<TradePanelProps> = ({
             onClick={() => setTradeType('sell')}
             className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
               tradeType === 'sell'
-                ? 'bg-danger text-white'
+                ? 'bg-green-500 text-white'
                 : 'text-gray-300 hover:text-white'
             }`}
           >
@@ -315,8 +312,8 @@ export const TradePanel: React.FC<TradePanelProps> = ({
             onClick={handleTrade}
             disabled={isLoading || !amount}
             className={`flex-1 btn btn-lg ${
-              tradeType === 'buy' ? 'btn-success' : 'btn-danger'
-            }`}
+              tradeType === 'buy' ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
+            } rounded-lg py-3 px-4 font-medium transition-colors disabled:opacity-50`}
           >
             {isLoading ? (
               <div className="flex items-center space-x-2">

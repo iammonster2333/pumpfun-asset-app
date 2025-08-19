@@ -3,11 +3,45 @@ import { useParams } from 'react-router-dom';
 import { useAppStore } from '@/stores/useAppStore';
 import { motion } from 'framer-motion';
 import { FaDiscord, FaTelegram, FaTwitter, FaGlobe } from 'react-icons/fa';
-import { Asset } from '@/types';
+import { Asset, KlineData } from '@/types';
+import { KlineChart } from '@/components/KlineChart';
+
+// 生成模拟K线数据：覆盖较长历史，便于多日/周/月聚合后仍可缩放/拖拽
+function generateMockKlineData(): KlineData[] {
+  const data: KlineData[] = [];
+  const now = Date.now();
+  const basePrice = 1.0;
+
+  // 以30分钟为一个点，生成约60天数据：60天 * 24小时 * 2 = 2880 条
+  const intervalMs = 30 * 60 * 1000;
+  const points = 60 * 24 * 2; // 2880
+
+  for (let i = points - 1; i >= 0; i--) {
+    const timestamp = now - i * intervalMs;
+    const t = points - i;
+    const drift = (t / points) * 0.2; // 轻微上行趋势
+    const wave = Math.sin(t / 24) * 0.05 + Math.sin(t / 200) * 0.03; // 多周期波动
+    const noise = (Math.random() - 0.5) * 0.02;
+    const price = basePrice + drift + wave + noise;
+
+    const open = price + (Math.random() - 0.5) * 0.01;
+    const close = price + (Math.random() - 0.5) * 0.01;
+    const high = Math.max(open, close) + Math.random() * 0.02;
+    const low = Math.min(open, close) - Math.random() * 0.02;
+    const volume = Math.random() * 1500 + 300;
+
+    data.push({ timestamp, open, high, low, close, volume });
+  }
+
+  return data;
+}
 
 export const AssetPage: React.FC = () => {
   const { assetId } = useParams<{ assetId: string }>();
   const { assets, currentAsset, setCurrentAsset, addDanmaku } = useAppStore();
+  // 与 K 线同步的时间周期（受控）
+  type TimeFrame = '1m'|'3m'|'5m'|'15m'|'1d'|'3d'|'5d'|'1w'|'3w'|'1M'|'3M';
+  const [timeframe, setTimeframe] = useState<TimeFrame>('1m');
   const [asset, setAsset] = useState<Asset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('chart');
@@ -77,7 +111,7 @@ export const AssetPage: React.FC = () => {
             volume24h: 50000,
             liquidity: 100000,
             holders: 500,
-            klineData: [],
+            klineData: generateMockKlineData(),
             tags: ['mock', 'demo'],
             status: 'active',
             createdAt: new Date(),
@@ -90,6 +124,31 @@ export const AssetPage: React.FC = () => {
       setIsLoading(false);
     }
   }, [assetId, assets]);
+
+  // 监听全局的时间周期切换（来自 AssetCard 的按钮）
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as TimeFrame | undefined;
+      if (!detail) return;
+      console.log('[AssetPage] 收到全局周期切换:', detail);
+      setTimeframe(detail);
+    };
+    window.addEventListener('kline:setTimeframe', handler as EventListener);
+    return () => window.removeEventListener('kline:setTimeframe', handler as EventListener);
+  }, []);
+
+  // 兜底：轮询全局变量（防止某些环境自定义事件失效）
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // @ts-ignore
+      const tf = window.__kline_tf as TimeFrame | undefined;
+      if (tf && tf !== timeframe) {
+        console.log('[AssetPage][poll] 同步全局周期:', tf);
+        setTimeframe(tf);
+      }
+    }, 300);
+    return () => clearInterval(timer);
+  }, [timeframe]);
 
   if (isLoading) {
     return (
@@ -181,10 +240,10 @@ export const AssetPage: React.FC = () => {
 
         {/* 交易按钮 */}
         <div className="flex space-x-4 mb-6">
-          <button className="flex-1 btn btn-success btn-lg">
+          <button className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">
             买入 {asset.symbol}
           </button>
-          <button className="flex-1 btn btn-danger btn-lg">
+          <button className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3 px-6 rounded-lg font-medium transition-colors">
             卖出 {asset.symbol}
           </button>
         </div>
@@ -235,8 +294,13 @@ export const AssetPage: React.FC = () => {
           <div className="p-6">
             {/* 图表标签页 */}
             {activeTab === 'chart' && (
-              <div className="h-64 bg-dark-700 rounded-lg flex items-center justify-center">
-                <p className="text-gray-400">K线图表将在这里显示</p>
+              <div className="h-96 overflow-hidden" style={{ overscrollBehavior: 'contain' }}>
+                <KlineChart
+                  data={asset.klineData || []}
+                  isActive={activeTab === 'chart'}
+                  timeframe={timeframe}
+                  showControls={false}
+                />
               </div>
             )}
             
@@ -467,14 +531,24 @@ export const AssetPage: React.FC = () => {
                             id: `danmaku-${Date.now()}`,
                             assetId: asset.id,
                             userId: 'current-user',
-                            username: '当前用户',
+                            user: {
+                              id: 'current-user',
+                              username: '当前用户',
+                              avatar: 'https://avatars.dicebear.com/api/avataaars/currentuser.svg',
+                              walletAddress: 'mock-address',
+                              balance: { sol: 0, usdc: 0 },
+                              level: 1,
+                              experience: 0,
+                              achievements: [],
+                              createdAt: new Date(),
+                              lastActiveAt: new Date()
+                            },
                             content: comment,
-                            timestamp: Date.now(),
                             color: '#ffffff',
-                            fontSize: 16,
-                            fontWeight: 'normal',
-                            position: Math.floor(Math.random() * 80) + 10,
-                            type: 'normal'
+                            position: 'top' as const,
+                            type: 'comment' as const,
+                            duration: 5000,
+                            createdAt: new Date()
                           });
                         }
                       }}
